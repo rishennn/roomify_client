@@ -51,7 +51,12 @@ export default function Dashboard() {
         let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
         idealSize = Math.max(idealSize, 12);
 
-        setCellSize(idealSize);
+        setCellSize((prevSize) => {
+          if (prevSize !== idealSize) {
+            return idealSize;
+          }
+          return prevSize;
+        });
       }
     });
 
