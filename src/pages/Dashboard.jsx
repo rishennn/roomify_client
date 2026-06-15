@@ -316,13 +316,13 @@ export default function Dashboard() {
           onClick={() => { setIsLeftSidebarOpen(!isLeftSidebarOpen); setIsRightSidebarOpen(false); }}
           className={`px-3 py-1.5 rounded transition ${isLeftSidebarOpen ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}
         >
-          📁 Схемы ({savedLayouts.length})
+          📁 Schemas ({savedLayouts.length})
         </button>
         <button 
           onClick={() => { setIsRightSidebarOpen(!isRightSidebarOpen); setIsLeftSidebarOpen(false); }}
           className={`px-3 py-1.5 rounded transition ${isRightSidebarOpen ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}
         >
-          🛋️ Каталог мебели
+          🛋️ Furniture catalog
         </button>
       </div>
 
