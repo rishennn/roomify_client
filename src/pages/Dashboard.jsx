@@ -8,7 +8,6 @@ import LeftSidebar from "../components/LeftSidebar";
 import CanvasArea from "../components/CanvasArea";
 import RightSidebar from "../components/RightSidebar";
 
-const CELL_SIZE = 50;
 const GRID_STEP = 0.1;
 
 export default function Dashboard() {
@@ -27,10 +26,46 @@ export default function Dashboard() {
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
+  // Динамический размер ячейки сетки
+  const [cellSize, setCellSize] = useState(50);
+
   useEffect(() => {
     fetchSavedLayouts();
     fetchCompaniesData();
   }, []);
+
+  // Эффект адаптивного пересчета ячейки под размеры экрана и комнаты
+  useEffect(() => {
+    if (!roomConfig) return;
+
+    const updateCellSize = () => {
+      // Вычисляем доступное пространство с учетом отступов интерфейса
+      const isMobile = window.innerWidth < 1024;
+      
+      // На мобилках вычитаем боковые паддинги (по 24px), на десктопе учитываем сайдбары
+      const paddingX = isMobile ? 48 : 80;
+      const sidebarWidth = isMobile ? 0 : 608; // Левый (288px) + Правый (320px)
+
+      const availableWidth = window.innerWidth - sidebarWidth - paddingX;
+      const availableHeight = window.innerHeight - (isMobile ? 220 : 160); // Учитываем хедеры и мобильные тулбары
+
+      // Сколько px может весить 1 метр комнаты по ширине и высоте
+      const maxCellWidth = Math.floor(availableWidth / roomConfig.width);
+      const maxCellHeight = Math.floor(availableHeight / roomConfig.height);
+      
+      // Идеальный размер — чтобы влезло в оба измерения, но не больше стандартных 50px
+      let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
+      
+      // Нижний порог безопасности (чтобы сетка не превратилась в точку на экстремально мелких экранах)
+      idealSize = Math.max(idealSize, 18); 
+
+      setCellSize(idealSize);
+    };
+
+    updateCellSize();
+    window.addEventListener("resize", updateCellSize);
+    return () => window.removeEventListener("resize", updateCellSize);
+  }, [roomConfig]);
 
   useEffect(() => {
     if (!isDragging || !activeId) return;
@@ -43,8 +78,9 @@ export default function Dashboard() {
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-      const currentXExact = (clientX - rect.left) / CELL_SIZE;
-      const currentYExact = (clientY - rect.top) / CELL_SIZE;
+      // Используем динамический размер ячейки cellSize для расчетов координат
+      const currentXExact = (clientX - rect.left) / cellSize;
+      const currentYExact = (clientY - rect.top) / cellSize;
 
       let targetX = currentXExact - dragOffset.x;
       let targetY = currentYExact - dragOffset.y;
@@ -83,7 +119,7 @@ export default function Dashboard() {
       window.removeEventListener("touchmove", handleMove);
       window.removeEventListener("touchend", handleUp);
     };
-  }, [isDragging, activeId, dragOffset, roomConfig, placedFurniture]);
+  }, [isDragging, activeId, dragOffset, roomConfig, placedFurniture, cellSize]);
 
   const showNotification = (message, type = "error") => {
     setToast({ message, type });
@@ -239,8 +275,8 @@ export default function Dashboard() {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    const clickXExact = (clientX - rect.left) / CELL_SIZE;
-    const clickYExact = (clientY - rect.top) / CELL_SIZE;
+    const clickXExact = (clientX - rect.left) / cellSize;
+    const clickYExact = (clientY - rect.top) / cellSize;
 
     setDragOffset({
       x: clickXExact - item.x,
@@ -375,7 +411,7 @@ export default function Dashboard() {
             placedFurniture={placedFurniture}
             activeItem={activeItem}
             activeId={activeId}
-            cellSize={CELL_SIZE}
+            cellSize={cellSize} {/* Прокидываем пересчитанный размер динамической ячейки */}
             onRotate={handleRotate}
             onRemove={handleRemove}
             onCanvasClick={handleCanvasClick}
