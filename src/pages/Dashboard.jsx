@@ -281,8 +281,9 @@ export default function Dashboard() {
     }
   };
 
-  const handleSaveLayout = async () => {
+ const handleSaveLayout = async () => {
     if (!roomConfig || placedFurniture.length === 0) return;
+    
     try {
       const token = localStorage.getItem("token");
       const payload = {
@@ -293,25 +294,25 @@ export default function Dashboard() {
       };
 
       if (currentLayoutId) {
+        console.log("Updating existing layout:", currentLayoutId);
         await axios.put(`${import.meta.env.VITE_API_URL}/layouts/${currentLayoutId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         showNotification("Layout updated successfully!", "success");
       } else {
+        console.log("Creating new layout");
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/layouts`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        if (response.data?._id) {
-          setCurrentLayoutId(response.data._id);
-        } else if (response.data?.id) {
-          setCurrentLayoutId(response.data.id);
-        }
+        const newId = response.data._id || response.data.id;
+        setCurrentLayoutId(newId);
         showNotification("Layout successfully saved!", "success");
       }
 
       fetchSavedLayouts();
     } catch (error) {
+      console.error("Save error:", error);
       showNotification("Error saving layout: " + error.message, "error");
     }
   };
