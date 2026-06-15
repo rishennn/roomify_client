@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 import RoomSizeModal from "../components/RoomSizeModal";
@@ -25,42 +25,33 @@ export default function Dashboard() {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [cellSize, setCellSize] = useState(50);
 
-  const canvasContainerRef = useRef(null);
-  const toastTimerRef = useRef(null);
-
   useEffect(() => {
     fetchSavedLayouts();
     fetchCompaniesData();
-    return () => {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    };
   }, []);
 
   useEffect(() => {
-    if (!roomConfig || !canvasContainerRef.current) return;
+    if (!roomConfig) return;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const rect = entry.target.getBoundingClientRect();
-        const padding = 24;
-        
-        const availableWidth = (rect.width || entry.contentRect.width) - padding;
-        const availableHeight = (rect.height || entry.contentRect.height) - padding;
+    const updateCellSize = () => {
+      const padding = 48;
+      const availableWidth = window.innerWidth - (window.innerWidth >= 1024 ? 608 : 0) - padding;
+      const availableHeight = window.innerHeight - 80 - padding;
 
-        if (availableWidth <= 0 || availableHeight <= 0) continue;
+      if (availableWidth <= 0 || availableHeight <= 0) return;
 
-        const maxCellWidth = Math.floor((availableWidth * 0.9) / roomConfig.width);
-        const maxCellHeight = Math.floor((availableHeight * 0.9) / roomConfig.height);
+      const maxCellWidth = Math.floor((availableWidth * 0.95) / roomConfig.width);
+      const maxCellHeight = Math.floor((availableHeight * 0.95) / roomConfig.height);
 
-        let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
-        idealSize = Math.max(idealSize, 12);
+      let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
+      idealSize = Math.max(idealSize, 15);
 
-        setCellSize((prevSize) => (prevSize !== idealSize ? idealSize : prevSize));
-      }
-    });
+      setCellSize(idealSize);
+    };
 
-    resizeObserver.observe(canvasContainerRef.current);
-    return () => resizeObserver.disconnect();
+    updateCellSize();
+    window.addEventListener("resize", updateCellSize);
+    return () => window.removeEventListener("resize", updateCellSize);
   }, [roomConfig]);
 
   useEffect(() => {
@@ -117,9 +108,8 @@ export default function Dashboard() {
   }, [isDragging, activeId, dragOffset, roomConfig, placedFurniture, cellSize]);
 
   const showNotification = (message, type = "error") => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3000);
   };
 
   const fetchCompaniesData = async () => {
@@ -402,20 +392,18 @@ export default function Dashboard() {
           />
         </div>
 
-        <div ref={canvasContainerRef} className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
-          {roomConfig && (
-            <CanvasArea
-              roomConfig={roomConfig}
-              placedFurniture={placedFurniture}
-              activeItem={activeItem}
-              activeId={activeId}
-              cellSize={cellSize}
-              onRotate={handleRotate}
-              onRemove={handleRemove}
-              onCanvasClick={handleCanvasClick}
-              onMouseDown={handleMouseDown}
-            />
-          )}
+        <div className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
+          <CanvasArea
+            roomConfig={roomConfig}
+            placedFurniture={placedFurniture}
+            activeItem={activeItem}
+            activeId={activeId}
+            cellSize={cellSize}
+            onRotate={handleRotate}
+            onRemove={handleRemove}
+            onCanvasClick={handleCanvasClick}
+            onMouseDown={handleMouseDown}
+          />
         </div>
 
         <div className={`
