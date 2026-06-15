@@ -342,7 +342,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#080c14] text-slate-200 flex flex-col selection:bg-blue-500/30 font-sans h-screen overflow-hidden relative">
-      <Notification toast={toast} onClose={() => setToast(null)} />
 
       {!roomConfig && <RoomSizeModal onConfirm={handleInitRoom} />}
 
@@ -395,6 +394,8 @@ export default function Dashboard() {
             }}
           />
         </div>
+        
+      <Notification toast={toast} onClose={() => setToast(null)} />
 
         <div ref={canvasContainerRef} className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
           <CanvasArea
