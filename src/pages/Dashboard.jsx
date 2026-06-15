@@ -26,10 +26,14 @@ export default function Dashboard() {
   const [cellSize, setCellSize] = useState(50);
 
   const canvasContainerRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     fetchSavedLayouts();
     fetchCompaniesData();
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -51,12 +55,7 @@ export default function Dashboard() {
         let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
         idealSize = Math.max(idealSize, 12);
 
-        setCellSize((prevSize) => {
-          if (prevSize !== idealSize) {
-            return idealSize;
-          }
-          return prevSize;
-        });
+        setCellSize((prevSize) => (prevSize !== idealSize ? idealSize : prevSize));
       }
     });
 
@@ -118,28 +117,28 @@ export default function Dashboard() {
   }, [isDragging, activeId, dragOffset, roomConfig, placedFurniture, cellSize]);
 
   const showNotification = (message, type = "error") => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    const timer = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(timer);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
   };
 
   const fetchCompaniesData = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/companies`);
-      setCompaniesData(response.data);
+      setCompaniesData(response.data || []);
     } catch (error) {
       console.error(error.message);
-      showNotification("Failed to load furniture catalogs", "error");
     }
   };
 
   const fetchSavedLayouts = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/layouts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSavedLayouts(response.data);
+      setSavedLayouts(response.data || []);
     } catch (error) {
       console.error(error.message);
     }
@@ -389,7 +388,7 @@ export default function Dashboard() {
                 width: layout.roomWidth,
                 height: layout.roomHeight,
               });
-              setPlacedFurniture(layout.furniture);
+              setPlacedFurniture(layout.furniture || []);
               setActiveId(null);
               setCurrentLayoutId(layout._id || layout.id); 
               setIsLeftSidebarOpen(false); 
@@ -404,17 +403,19 @@ export default function Dashboard() {
         </div>
 
         <div ref={canvasContainerRef} className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
-          <CanvasArea
-            roomConfig={roomConfig}
-            placedFurniture={placedFurniture}
-            activeItem={activeItem}
-            activeId={activeId}
-            cellSize={cellSize}
-            onRotate={handleRotate}
-            onRemove={handleRemove}
-            onCanvasClick={handleCanvasClick}
-            onMouseDown={handleMouseDown}
-          />
+          {roomConfig && (
+            <CanvasArea
+              roomConfig={roomConfig}
+              placedFurniture={placedFurniture}
+              activeItem={activeItem}
+              activeId={activeId}
+              cellSize={cellSize}
+              onRotate={handleRotate}
+              onRemove={handleRemove}
+              onCanvasClick={handleCanvasClick}
+              onMouseDown={handleMouseDown}
+            />
+          )}
         </div>
 
         <div className={`
