@@ -3,8 +3,8 @@ import { Trash2, Plus } from "lucide-react";
 
 export default function LeftSidebar({ savedLayouts, onLoadLayout, onDeleteLayout, onResetRoom }) {
   return (
-    <aside className="w-64 bg-[#0b111e] border-r border-slate-800/80 p-4 flex flex-col gap-4 overflow-y-auto shrink-0">
-      <div>
+    <aside className="w-full lg:w-64 bg-[#0b111e] lg:border-r border-slate-800/80 p-4 flex flex-col gap-4 overflow-y-auto h-full shrink-0">
+      <div className="flex-1">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
           Saved Layouts
         </h3>
@@ -42,7 +42,7 @@ export default function LeftSidebar({ savedLayouts, onLoadLayout, onDeleteLayout
       </div>
       <button
         onClick={onResetRoom}
-        className="w-full mt-auto flex items-center justify-center gap-2 bg-[#101625] hover:bg-[#151e33] border border-slate-800 py-2.5 rounded-xl text-xs font-bold text-slate-300 transition-all"
+        className="w-full mt-4 lg:mt-auto flex items-center justify-center gap-2 bg-[#101625] hover:bg-[#151e33] border border-slate-800 py-2.5 rounded-xl text-xs font-bold text-slate-300 transition-all shrink-0 active:scale-[0.98]"
       >
         <Plus className="w-4 h-4" /> New Canvas Space
       </button>

@@ -9,18 +9,18 @@ export default function RightSidebar({
   onAddFurniture,
 }) {
   return (
-    <aside className="w-72 bg-[#0b111e] border-l border-slate-800/80 p-4 flex flex-col overflow-y-auto shrink-0">
+    <aside className="w-full lg:w-80 bg-[#0b111e] lg:border-l border-slate-800/80 p-4 flex flex-col h-full overflow-hidden shrink-0">
       {!selectedCompany ? (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-y-auto">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
             <Store className="w-3.5 h-3.5" /> Brands & Providers
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-3 pb-2">
             {companiesData.map((comp) => (
               <button
                 key={comp.id}
                 onClick={() => onSelectCompanyId(comp.id)}
-                className="w-full bg-[#101625] hover:bg-[#151e33] border border-slate-800/80 hover:border-slate-700/80 p-4 rounded-xl transition-all flex items-center gap-3.5 group text-left shadow-lg shadow-black/10"
+                className="w-full bg-[#101625] hover:bg-[#151e33] border border-slate-800/80 hover:border-slate-700/80 p-4 rounded-xl transition-all flex items-center gap-3.5 group text-left shadow-lg shadow-black/10 active:scale-[0.99]"
               >
                 <div
                   className={`w-12 h-12 rounded-lg ${comp.logoBg} flex items-center justify-center font-black text-xs tracking-tighter uppercase shrink-0 shadow-inner group-hover:scale-105 transition-transform`}
@@ -40,16 +40,16 @@ export default function RightSidebar({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           <button
             onClick={() => onSelectCompanyId(null)}
-            className="flex items-center gap-1 text-slate-400 hover:text-white text-xs font-bold mb-4 transition-colors group w-fit"
+            className="flex items-center gap-1 text-slate-400 hover:text-white text-xs font-bold mb-4 transition-colors group w-fit shrink-0"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />{" "}
             Back to Brands
           </button>
 
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-800/60 mb-4">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-800/60 mb-4 shrink-0">
             <div
               className={`w-8 h-8 rounded-md ${selectedCompany.logoBg} flex items-center justify-center font-black text-[10px] uppercase shrink-0`}
             >
@@ -63,7 +63,7 @@ export default function RightSidebar({
             </div>
           </div>
 
-          <div className="space-y-2.5 flex-1 overflow-y-auto pr-0.5">
+          <div className="space-y-2.5 flex-1 overflow-y-auto pr-0.5 pb-2">
             {selectedCompany.catalog?.map((item) => {
               const fitsInRoom = roomConfig
                 ? (item.width <= roomConfig.width && item.height <= roomConfig.height) ||
@@ -73,19 +73,19 @@ export default function RightSidebar({
               return (
                 <div
                   key={item.id}
-                  className={`bg-[#101625] border p-3.5 rounded-xl flex items-center justify-between group transition-all ${
+                  className={`bg-[#101625] border p-3.5 rounded-xl flex items-center justify-between gap-3 group transition-all ${
                     fitsInRoom
                       ? "border-slate-800/60 hover:border-slate-700"
                       : "border-red-900/20 opacity-40 select-none"
                   }`}
                 >
-                  <div>
-                    <h4 className="text-xs font-black text-white">{item.name}</h4>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mt-0.5">
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-black text-white truncate">{item.name}</h4>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mt-0.5 whitespace-nowrap">
                       Размер: {item.width}м × {item.height}м
                     </p>
                     {!fitsInRoom && (
-                      <p className="text-[9px] text-red-400 font-medium mt-0.5">
+                      <p className="text-[9px] text-red-400 font-medium mt-0.5 whitespace-nowrap">
                         Too large for this room
                       </p>
                     )}
@@ -93,7 +93,7 @@ export default function RightSidebar({
                   <button
                     onClick={() => fitsInRoom && onAddFurniture(item)}
                     disabled={!fitsInRoom}
-                    className={`p-2 rounded-lg transition-all border ${
+                    className={`p-2 rounded-lg transition-all border shrink-0 ${
                       fitsInRoom
                         ? "bg-[#172033] hover:bg-blue-500 text-slate-400 hover:text-white border-slate-800/80 hover:border-blue-400/40 shadow-inner group-hover:scale-105 active:scale-95"
                         : "bg-slate-900 text-slate-600 border-slate-900 cursor-not-allowed"

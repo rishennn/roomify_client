@@ -24,6 +24,9 @@ export default function Dashboard() {
   
   const [currentLayoutId, setCurrentLayoutId] = useState(null);
 
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+
   useEffect(() => {
     fetchSavedLayouts();
     fetchCompaniesData();
@@ -131,6 +134,7 @@ export default function Dashboard() {
           setPlacedFurniture([...placedFurniture, newItem]);
           setActiveId(id);
           placed = true;
+          setIsRightSidebarOpen(false);
           break;
         }
       }
@@ -307,45 +311,85 @@ export default function Dashboard() {
         onLogout={handleLogout}
       />
 
-      <div className="flex-1 flex overflow-hidden">
-        <LeftSidebar
-          savedLayouts={savedLayouts}
-          onLoadLayout={(layout) => {
-            setRoomConfig({
-              name: layout.name,
-              width: layout.roomWidth,
-              height: layout.roomHeight,
-            });
-            setPlacedFurniture(layout.furniture);
-            setActiveId(null);
-            setCurrentLayoutId(layout._id); 
-          }}
-          onDeleteLayout={handleDeleteLayout}
-          onResetRoom={() => {
-            setRoomConfig(null);
-            setCurrentLayoutId(null)
-          }}
-        />
+      <div className="lg:hidden flex justify-between bg-[#0e1626] border-b border-slate-800 p-2 text-sm z-30">
+        <button 
+          onClick={() => { setIsLeftSidebarOpen(!isLeftSidebarOpen); setIsRightSidebarOpen(false); }}
+          className={`px-3 py-1.5 rounded transition ${isLeftSidebarOpen ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}
+        >
+          📁 Схемы ({savedLayouts.length})
+        </button>
+        <button 
+          onClick={() => { setIsRightSidebarOpen(!isRightSidebarOpen); setIsLeftSidebarOpen(false); }}
+          className={`px-3 py-1.5 rounded transition ${isRightSidebarOpen ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}
+        >
+          🛋️ Каталог мебели
+        </button>
+      </div>
 
-        <CanvasArea
-          roomConfig={roomConfig}
-          placedFurniture={placedFurniture}
-          activeItem={activeItem}
-          activeId={activeId}
-          cellSize={CELL_SIZE}
-          onRotate={handleRotate}
-          onRemove={handleRemove}
-          onCanvasClick={handleCanvasClick}
-          onMouseDown={handleMouseDown}
-        />
+      <div className="flex-1 flex overflow-hidden relative">
+        
+        <div className={`
+          absolute inset-y-0 left-0 z-40 w-72 bg-[#0d1527] border-r border-slate-800/80 transform transition-transform duration-300 ease-in-out
+          lg:static lg:translate-x-0 lg:flex
+          ${isLeftSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}>
+          <LeftSidebar
+            savedLayouts={savedLayouts}
+            onLoadLayout={(layout) => {
+              setRoomConfig({
+                name: layout.name,
+                width: layout.roomWidth,
+                height: layout.roomHeight,
+              });
+              setPlacedFurniture(layout.furniture);
+              setActiveId(null);
+              setCurrentLayoutId(layout._id); 
+              setIsLeftSidebarOpen(false); 
+            }}
+            onDeleteLayout={handleDeleteLayout}
+            onResetRoom={() => {
+              setRoomConfig(null);
+              setCurrentLayoutId(null);
+              setIsLeftSidebarOpen(false);
+            }}
+          />
+        </div>
 
-        <RightSidebar
-          companiesData={companiesData}
-          selectedCompany={selectedCompany}
-          roomConfig={roomConfig}
-          onSelectCompanyId={setSelectedCompanyId}
-          onAddFurniture={addFurnitureToCanvas}
-        />
+        <div className="flex-1 overflow-auto p-4 custom-scrollbar flex items-center justify-center bg-[#090e1a]">
+          <CanvasArea
+            roomConfig={roomConfig}
+            placedFurniture={placedFurniture}
+            activeItem={activeItem}
+            activeId={activeId}
+            cellSize={CELL_SIZE}
+            onRotate={handleRotate}
+            onRemove={handleRemove}
+            onCanvasClick={handleCanvasClick}
+            onMouseDown={handleMouseDown}
+          />
+        </div>
+
+        <div className={`
+          absolute inset-y-0 right-0 z-40 w-80 bg-[#0d1527] border-l border-slate-800/80 transform transition-transform duration-300 ease-in-out
+          lg:static lg:translate-x-0 lg:flex
+          ${isRightSidebarOpen ? "translate-x-0" : "translate-x-full"}
+        `}>
+          <RightSidebar
+            companiesData={companiesData}
+            selectedCompany={selectedCompany}
+            roomConfig={roomConfig}
+            onSelectCompanyId={setSelectedCompanyId}
+            onAddFurniture={addFurnitureToCanvas}
+          />
+        </div>
+
+        {(isLeftSidebarOpen || isRightSidebarOpen) && (
+          <div 
+            className="absolute inset-0 bg-black/60 z-30 lg:hidden"
+            onClick={() => { setIsLeftSidebarOpen(false); setIsRightSidebarOpen(false); }}
+          />
+        )}
+
       </div>
     </div>
   );
