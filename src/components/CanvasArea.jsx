@@ -52,11 +52,11 @@ export default function CanvasArea({
       </div>
 
       <div
-        className="flex-1 overflow-auto p-6 sm:p-12 flex items-center justify-center relative touch-none"
+        className="flex-1 overflow-hidden flex items-center justify-center relative touch-none w-full h-full"
         onClick={onCanvasClick}
       >
         {roomConfig && (
-          <div className="relative p-8 max-w-full max-h-full flex items-center justify-center overflow-auto container-snap">
+          <div className="relative max-w-full max-h-full flex items-center justify-center overflow-hidden">
             <div
               id="grid-canvas"
               className="bg-[#0b111e]/40 border border-slate-800/80 rounded-xl relative shadow-2xl transition-all shrink-0 my-auto mx-auto touch-none"
