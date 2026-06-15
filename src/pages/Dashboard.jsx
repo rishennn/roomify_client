@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 import RoomSizeModal from "../components/RoomSizeModal";
@@ -25,40 +25,35 @@ export default function Dashboard() {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [cellSize, setCellSize] = useState(50);
 
-  const canvasContainerRef = useRef(null);
-
   useEffect(() => {
     fetchSavedLayouts();
     fetchCompaniesData();
   }, []);
 
-  useEffect(() => {
-    if (!roomConfig || !canvasContainerRef.current) return;
+useEffect(() => {
+    if (!roomConfig) return;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const rect = entry.target.getBoundingClientRect();
-        const padding = 24;
-        
-        const availableWidth = (rect.width || entry.contentRect.width) - padding;
-        const availableHeight = (rect.height || entry.contentRect.height) - padding;
+    const updateCellSize = () => {
+      const padding = 48;
+      const availableWidth = window.innerWidth - (window.innerWidth >= 1024 ? 608 : 0) - padding;
+      const availableHeight = window.innerHeight - 80 - padding;
 
-        if (availableWidth <= 0 || availableHeight <= 0) continue;
+      if (availableWidth <= 0 || availableHeight <= 0) return;
 
-        const maxCellWidth = Math.floor((availableWidth * 0.9) / roomConfig.width);
-        const maxCellHeight = Math.floor((availableHeight * 0.9) / roomConfig.height);
+      const maxCellWidth = Math.floor((availableWidth * 0.95) / roomConfig.width);
+      const maxCellHeight = Math.floor((availableHeight * 0.95) / roomConfig.height);
 
-        let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
-        idealSize = Math.max(idealSize, 12);
+      let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
+      idealSize = Math.max(idealSize, 15);
 
-        setCellSize(idealSize);
-      }
-    });
+      setCellSize(prevSize => (prevSize !== idealSize ? idealSize : prevSize));
+    };
 
-    resizeObserver.observe(canvasContainerRef.current);
-    return () => resizeObserver.disconnect();
+    updateCellSize();
+    window.addEventListener("resize", updateCellSize);
+    return () => window.removeEventListener("resize", updateCellSize);
   }, [roomConfig]);
-
+  
   useEffect(() => {
     if (!isDragging || !activeId) return;
 
@@ -114,27 +109,26 @@ export default function Dashboard() {
 
   const showNotification = (message, type = "error") => {
     setToast({ message, type });
-    const timer = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(timer);
+    setTimeout(() => setToast(null), 3000);
   };
 
   const fetchCompaniesData = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/companies`);
-      setCompaniesData(response.data);
+      setCompaniesData(response.data || []);
     } catch (error) {
       console.error(error.message);
-      showNotification("Failed to load furniture catalogs", "error");
     }
   };
 
   const fetchSavedLayouts = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/layouts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSavedLayouts(response.data);
+      setSavedLayouts(response.data || []);
     } catch (error) {
       console.error(error.message);
     }
@@ -304,6 +298,8 @@ export default function Dashboard() {
         
         if (response.data?._id) {
           setCurrentLayoutId(response.data._id);
+        } else if (response.data?.id) {
+          setCurrentLayoutId(response.data.id);
         }
         showNotification("Layout successfully saved!", "success");
       }
@@ -382,9 +378,9 @@ export default function Dashboard() {
                 width: layout.roomWidth,
                 height: layout.roomHeight,
               });
-              setPlacedFurniture(layout.furniture);
+              setPlacedFurniture(layout.furniture || []);
               setActiveId(null);
-              setCurrentLayoutId(layout._id); 
+              setCurrentLayoutId(layout._id || layout.id); 
               setIsLeftSidebarOpen(false); 
             }}
             onDeleteLayout={handleDeleteLayout}
@@ -396,7 +392,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div ref={canvasContainerRef} className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
+        <div className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
           <CanvasArea
             roomConfig={roomConfig}
             placedFurniture={placedFurniture}
