@@ -54,7 +54,7 @@ export default function AuthMain() {
     const endpoint = isSignIn ? '/auth/signin' : '/auth/signup';
     
     try {
-      const response = await axios.post(`http://localhost:4444${endpoint}`, data);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, data);
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
