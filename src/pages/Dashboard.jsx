@@ -32,6 +32,59 @@ export default function Dashboard() {
     fetchCompaniesData();
   }, []);
 
+  useEffect(() => {
+    if (!isDragging || !activeId) return;
+
+    const handleMove = (e) => {
+      if (!roomConfig) return;
+      const rect = document.getElementById("grid-canvas")?.getBoundingClientRect();
+      if (!rect) return;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const currentXExact = (clientX - rect.left) / CELL_SIZE;
+      const currentYExact = (clientY - rect.top) / CELL_SIZE;
+
+      let targetX = currentXExact - dragOffset.x;
+      let targetY = currentYExact - dragOffset.y;
+
+      targetX = Math.round(targetX / GRID_STEP) * GRID_STEP;
+      targetY = Math.round(targetY / GRID_STEP) * GRID_STEP;
+
+      targetX = Number(targetX.toFixed(2));
+      targetY = Number(targetY.toFixed(2));
+
+      const currentItem = placedFurniture.find((i) => i.id === activeId);
+      if (!currentItem) return;
+
+      targetX = Math.max(0, Math.min(targetX, roomConfig.width - currentItem.width));
+      targetY = Math.max(0, Math.min(targetY, roomConfig.height - currentItem.height));
+
+      if (!checkCollision(activeId, targetX, targetY, currentItem.width, currentItem.height)) {
+        setPlacedFurniture((prev) =>
+          prev.map((item) => (item.id === activeId ? { ...item, x: targetX, y: targetY } : item))
+        );
+      }
+    };
+
+    const handleUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    window.addEventListener("touchmove", handleMove, { passive: false });
+    window.addEventListener("touchend", handleUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleUp);
+    };
+  }, [isDragging, activeId, dragOffset, roomConfig, placedFurniture]);
+
   const showNotification = (message, type = "error") => {
     setToast({ message, type });
     const timer = setTimeout(() => setToast(null), 3000);
@@ -178,56 +231,21 @@ export default function Dashboard() {
   };
 
   const handleMouseDown = (e, item) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     setActiveId(item.id);
     setIsDragging(true);
 
     const rect = document.getElementById("grid-canvas").getBoundingClientRect();
-    const clickXExact = (e.clientX - rect.left) / CELL_SIZE;
-    const clickYExact = (e.clientY - rect.top) / CELL_SIZE;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const clickXExact = (clientX - rect.left) / CELL_SIZE;
+    const clickYExact = (clientY - rect.top) / CELL_SIZE;
 
     setDragOffset({
       x: clickXExact - item.x,
       y: clickYExact - item.y,
     });
-  };
-
-  const handleMouseMove = (e) => {
-    if (!activeId || !isDragging || !roomConfig) return;
-    const rect = document.getElementById("grid-canvas").getBoundingClientRect();
-
-    const currentXExact = (e.clientX - rect.left) / CELL_SIZE;
-    const currentYExact = (e.clientY - rect.top) / CELL_SIZE;
-
-    let targetX = currentXExact - dragOffset.x;
-    let targetY = currentYExact - dragOffset.y;
-
-    targetX = Math.round(targetX / GRID_STEP) * GRID_STEP;
-    targetY = Math.round(targetY / GRID_STEP) * GRID_STEP;
-
-    targetX = Number(targetX.toFixed(2));
-    targetY = Number(targetY.toFixed(2));
-
-    const currentItem = placedFurniture.find((i) => i.id === activeId);
-    if (!currentItem) return;
-
-    targetX = Math.max(0, Math.min(targetX, roomConfig.width - currentItem.width));
-    targetY = Math.max(0, Math.min(targetY, roomConfig.height - currentItem.height));
-
-    if (!checkCollision(activeId, targetX, targetY, currentItem.width, currentItem.height)) {
-      setPlacedFurniture(
-        placedFurniture.map((item) => {
-          if (item.id === activeId) {
-            return { ...item, x: targetX, y: targetY };
-          }
-          return item;
-        })
-      );
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
   };
 
   const handleCanvasClick = (e) => {
@@ -296,11 +314,7 @@ export default function Dashboard() {
   const activeItem = placedFurniture.find((item) => item.id === activeId);
 
   return (
-    <div
-      className="min-h-screen bg-[#080c14] text-slate-200 flex flex-col selection:bg-blue-500/30 font-sans h-screen overflow-hidden relative"
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    >
+    <div className="min-h-screen bg-[#080c14] text-slate-200 flex flex-col selection:bg-blue-500/30 font-sans h-screen overflow-hidden relative">
       <Notification toast={toast} onClose={() => setToast(null)} />
 
       {!roomConfig && <RoomSizeModal onConfirm={handleInitRoom} />}
@@ -355,7 +369,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="flex-1 overflow-auto p-4 custom-scrollbar flex items-center justify-center bg-[#090e1a]">
+        <div className="flex-1 overflow-auto custom-scrollbar flex items-center justify-center bg-[#090e1a]">
           <CanvasArea
             roomConfig={roomConfig}
             placedFurniture={placedFurniture}
