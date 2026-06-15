@@ -294,7 +294,6 @@ export default function Dashboard() {
       };
 
       if (currentLayoutId) {
-        console.log("Updating existing layout:", currentLayoutId);
         await axios.put(`${import.meta.env.VITE_API_URL}/layouts/${currentLayoutId}`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
