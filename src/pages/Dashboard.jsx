@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 import RoomSizeModal from "../components/RoomSizeModal";
@@ -20,51 +20,40 @@ export default function Dashboard() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [toast, setToast] = useState(null);
-  
   const [currentLayoutId, setCurrentLayoutId] = useState(null);
-
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
-
-  // Динамический размер ячейки сетки
   const [cellSize, setCellSize] = useState(50);
+
+  const canvasContainerRef = useRef(null);
 
   useEffect(() => {
     fetchSavedLayouts();
     fetchCompaniesData();
   }, []);
 
-  // Эффект адаптивного пересчета ячейки под размеры экрана и комнаты
   useEffect(() => {
-    if (!roomConfig) return;
+    if (!roomConfig || !canvasContainerRef.current) return;
 
-    const updateCellSize = () => {
-      // Вычисляем доступное пространство с учетом отступов интерфейса
-      const isMobile = window.innerWidth < 1024;
-      
-      // На мобилках вычитаем боковые паддинги (по 24px), на десктопе учитываем сайдбары
-      const paddingX = isMobile ? 48 : 80;
-      const sidebarWidth = isMobile ? 0 : 608; // Левый (288px) + Правый (320px)
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        
+        const availableWidth = width - 32;
+        const availableHeight = height - 32;
 
-      const availableWidth = window.innerWidth - sidebarWidth - paddingX;
-      const availableHeight = window.innerHeight - (isMobile ? 220 : 160); // Учитываем хедеры и мобильные тулбары
+        const maxCellWidth = Math.floor(availableWidth / roomConfig.width);
+        const maxCellHeight = Math.floor(availableHeight / roomConfig.height);
 
-      // Сколько px может весить 1 метр комнаты по ширине и высоте
-      const maxCellWidth = Math.floor(availableWidth / roomConfig.width);
-      const maxCellHeight = Math.floor(availableHeight / roomConfig.height);
-      
-      // Идеальный размер — чтобы влезло в оба измерения, но не больше стандартных 50px
-      let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
-      
-      // Нижний порог безопасности (чтобы сетка не превратилась в точку на экстремально мелких экранах)
-      idealSize = Math.max(idealSize, 18); 
+        let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
+        idealSize = Math.max(idealSize, 15);
 
-      setCellSize(idealSize);
-    };
+        setCellSize(idealSize);
+      }
+    });
 
-    updateCellSize();
-    window.addEventListener("resize", updateCellSize);
-    return () => window.removeEventListener("resize", updateCellSize);
+    resizeObserver.observe(canvasContainerRef.current);
+    return () => resizeObserver.disconnect();
   }, [roomConfig]);
 
   useEffect(() => {
@@ -78,7 +67,6 @@ export default function Dashboard() {
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-      // Используем динамический размер ячейки cellSize для расчетов координат
       const currentXExact = (clientX - rect.left) / cellSize;
       const currentYExact = (clientY - rect.top) / cellSize;
 
@@ -132,7 +120,7 @@ export default function Dashboard() {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/companies`);
       setCompaniesData(response.data);
     } catch (error) {
-      console.error("Error fetching companies catalog:", error.message);
+      console.error(error.message);
       showNotification("Failed to load furniture catalogs", "error");
     }
   };
@@ -405,13 +393,13 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="flex-1 overflow-auto custom-scrollbar flex items-center justify-center bg-[#090e1a]">
+        <div ref={canvasContainerRef} className="flex-1 overflow-auto custom-scrollbar flex items-center justify-center bg-[#090e1a]">
           <CanvasArea
             roomConfig={roomConfig}
             placedFurniture={placedFurniture}
             activeItem={activeItem}
             activeId={activeId}
-            cellSize={cellSize} {/* Прокидываем пересчитанный размер динамической ячейки */}
+            cellSize={cellSize}
             onRotate={handleRotate}
             onRemove={handleRemove}
             onCanvasClick={handleCanvasClick}
