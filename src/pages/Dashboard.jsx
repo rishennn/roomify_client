@@ -37,16 +37,19 @@ export default function Dashboard() {
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
-        const { width, height } = entry.contentRect;
+        const rect = entry.target.getBoundingClientRect();
+        const padding = 24;
         
-        const availableWidth = width - 32;
-        const availableHeight = height - 32;
+        const availableWidth = (rect.width || entry.contentRect.width) - padding;
+        const availableHeight = (rect.height || entry.contentRect.height) - padding;
 
-        const maxCellWidth = Math.floor(availableWidth / roomConfig.width);
-        const maxCellHeight = Math.floor(availableHeight / roomConfig.height);
+        if (availableWidth <= 0 || availableHeight <= 0) continue;
+
+        const maxCellWidth = Math.floor((availableWidth * 0.9) / roomConfig.width);
+        const maxCellHeight = Math.floor((availableHeight * 0.9) / roomConfig.height);
 
         let idealSize = Math.min(maxCellWidth, maxCellHeight, 50);
-        idealSize = Math.max(idealSize, 15);
+        idealSize = Math.max(idealSize, 12);
 
         setCellSize(idealSize);
       }
@@ -393,7 +396,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div ref={canvasContainerRef} className="flex-1 overflow-auto custom-scrollbar flex items-center justify-center bg-[#090e1a]">
+        <div ref={canvasContainerRef} className="flex-1 overflow-hidden flex items-center justify-center bg-[#090e1a]">
           <CanvasArea
             roomConfig={roomConfig}
             placedFurniture={placedFurniture}
