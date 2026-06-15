@@ -304,6 +304,8 @@ export default function Dashboard() {
         
         if (response.data?._id) {
           setCurrentLayoutId(response.data._id);
+        } else if (response.data?.id) {
+          setCurrentLayoutId(response.data.id);
         }
         showNotification("Layout successfully saved!", "success");
       }
@@ -384,7 +386,7 @@ export default function Dashboard() {
               });
               setPlacedFurniture(layout.furniture);
               setActiveId(null);
-              setCurrentLayoutId(layout._id); 
+              setCurrentLayoutId(layout._id || layout.id); 
               setIsLeftSidebarOpen(false); 
             }}
             onDeleteLayout={handleDeleteLayout}
