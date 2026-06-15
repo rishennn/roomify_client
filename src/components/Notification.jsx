@@ -7,8 +7,8 @@ export default function Notification({ toast, onClose }) {
   const isSuccess = toast.type === "success";
 
   return (
-    <div className="absolute top-4 left-4 right-4 md:left-6 md:right-auto md:w-80 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-      <div className={`w-full bg-[#0f172a] border ${isSuccess ? "border-emerald-500/40" : "border-red-500/40"} rounded-xl p-3.5 shadow-xl shadow-black/60 flex items-start gap-3`}>
+    <div className="fixed top-16 left-1/2 -translate-x-1/2 md:left-[304px] md:translate-x-0 z-[100] w-full max-w-sm px-4 md:px-0 animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className={`w-full bg-[#0f172a] border ${isSuccess ? "border-emerald-500/40" : "border-red-500/40"} rounded-xl p-3.5 shadow-2xl shadow-black/80 flex items-start gap-3`}>
         <div className="shrink-0 mt-0.5">
           {isSuccess ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
